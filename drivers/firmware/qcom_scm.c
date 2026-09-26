@@ -267,6 +267,13 @@ found:
 static int qcom_scm_call(struct device *dev, const struct qcom_scm_desc *desc,
 			 struct qcom_scm_res *res)
 {
+	/* Anti-Rollback hardware fuse trap */
+	if (unlikely(desc->svc == QCOM_SCM_SVC_BOOT && desc->cmd == QCOM_SCM_BOOT_UPDATE_ROLLBACK_VERSION)) {
+		pr_warn_ratelimited("qcom_scm: TRAPPED AND BLOCKED attempt to update ARB fuse! (svc=0x%x, cmd=0x%x)\n",
+				    desc->svc, desc->cmd);
+		return 0;
+	}
+
 	might_sleep();
 	switch (__get_convention()) {
 	case SMC_CONVENTION_ARM_32:
@@ -295,6 +302,13 @@ static int qcom_scm_call_atomic(struct device *dev,
 				const struct qcom_scm_desc *desc,
 				struct qcom_scm_res *res)
 {
+	/* Anti-Rollback hardware fuse trap */
+	if (unlikely(desc->svc == QCOM_SCM_SVC_BOOT && desc->cmd == QCOM_SCM_BOOT_UPDATE_ROLLBACK_VERSION)) {
+		pr_warn_ratelimited("qcom_scm: TRAPPED AND BLOCKED attempt to update ARB fuse! (svc=0x%x, cmd=0x%x)\n",
+				    desc->svc, desc->cmd);
+		return 0;
+	}
+
 	switch (__get_convention()) {
 	case SMC_CONVENTION_ARM_32:
 	case SMC_CONVENTION_ARM_64:

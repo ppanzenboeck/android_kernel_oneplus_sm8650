@@ -215,6 +215,16 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
 	if (!dev)
 		return -EPROBE_DEFER;
 
+	/*
+	 * Anti-Rollback hardware fuse protection:
+	 * Block any attempt to burn the QFPROM ARB fuse via SCM BOOT 0x1E down to TrustZone.
+	 */
+	if (unlikely(desc->svc == QCOM_SCM_SVC_BOOT && desc->cmd == QCOM_SCM_BOOT_UPDATE_ROLLBACK_VERSION)) {
+		pr_warn_ratelimited("qcom_scm: TRAPPED AND BLOCKED attempt to update ARB fuse! (svc=0x%x, cmd=0x%x)\n",
+				    desc->svc, desc->cmd);
+		return 0;
+	}
+
 	smc.args[0] = ARM_SMCCC_CALL_VAL(
 		smccc_call_type,
 		qcom_smccc_convention,
